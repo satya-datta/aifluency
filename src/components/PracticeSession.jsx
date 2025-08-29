@@ -127,16 +127,8 @@ const PracticeSession = ({ onComplete, demoMode = false, mockUser = null, mockPr
       };
 
       recognitionRef.current.onend = () => {
-        // Restart recognition if in voice mode
-        if (voiceMode && micEnabled && !isProcessingVoice) {
-          setTimeout(() => {
-            try {
-              recognitionRef.current.start();
-            } catch (e) {
-              // Recognition already started or not available
-            }
-          }, 100);
-        }
+        // Recognition will restart automatically due to continuous: true
+        setIsListening(false);
       };
 
       // Start continuous listening when component mounts
