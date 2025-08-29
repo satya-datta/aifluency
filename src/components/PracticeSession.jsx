@@ -277,7 +277,7 @@ const PracticeSession = ({ onComplete, demoMode = false, mockUser = null, mockPr
       // Auto-play AI response immediately
       setTimeout(() => {
         speakText(response);
-      }, 300); // Small delay for better UX
+      }, 100); // Reduced delay since we now handle listening properly
       
       // Update session stats
       setSessionStats(prev => ({
@@ -344,6 +344,12 @@ const PracticeSession = ({ onComplete, demoMode = false, mockUser = null, mockPr
 
   const speakText = (text) => {
     if ('speechSynthesis' in window) {
+      // Stop listening while AI is speaking to prevent feedback loop
+      const wasListening = isListening;
+      if (wasListening) {
+        stopContinuousListening();
+      }
+      
       // Stop any current speech
       speechSynthesis.cancel();
       
@@ -352,6 +358,15 @@ const PracticeSession = ({ onComplete, demoMode = false, mockUser = null, mockPr
       utterance.rate = 0.85; // Slightly slower for clarity
       utterance.pitch = 1.2; // Higher pitch for female voice
       utterance.volume = 0.8;
+      
+      // Resume listening after AI finishes speaking
+      utterance.onend = () => {
+        if (wasListening && voiceMode && micEnabled) {
+          setTimeout(() => {
+            startContinuousListening();
+          }, 500); // Small delay to ensure clean restart
+        }
+      };
       
       // Wait for voices to load, then select best female voice
       const setVoice = () => {
